@@ -41,6 +41,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'hello',
+    'djangosecure',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -53,6 +54,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'djangosecure.middleware.SecurityMiddleware',
 )
 
 ROOT_URLCONF = 'https.urls'
@@ -89,6 +91,24 @@ DATABASES = {
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
+
+SECURE_SSL_REDIRECT = True
+
+SECURE_HSTS_SECONDS = 1
+
+SECURE_HSTS_SUBDOMAINS = True
+
+SECURE_FRAME_DENY = True
+
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+
+SECURE_CONTENT_TYPE_NOSNIFF = True
+
+SECURE_BROWSER_XSS_FILTER = True
+
+SESSION_COOKIE_SECURE = True
+
+SESSION_COOKIE_HTTPONLY = True
 
 LANGUAGE_CODE = 'en-us'
 
