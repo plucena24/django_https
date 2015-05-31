@@ -3,6 +3,7 @@ Super basic example on how to encrypt all traffic over SSL using django and djan
 To use:
 
 .. code-block:: console
+
    $ sudo /bin/bash
     
    $ git clone https://github.com/NAThompson/django_https.git
