@@ -1,0 +1,16 @@
+bin
+lib
+lib64
+pyvenv.cfg
+*.komodoproject
+**/__init__.py
+**/__pycache__
+*.aux
+*.log
+*.toc
+*.snm
+*.vrb
+*.nav
+*.out
+**/db.sqlite3
+src/signups/migrations/*
