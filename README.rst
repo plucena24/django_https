@@ -11,5 +11,7 @@ To use:
    $ source bin/activate
    $ pip install -r requirements.txt
    $ cd src
-   $ ./manage.py runsslserver 127.0.0.1:443
+   $ ./manage.py runsslserver --addrport 127.0.0.1:443
+
+Visit at ``https://127.0.0.1``; your browser won't trust your certificate.
     
