@@ -5,14 +5,22 @@ To use:
 .. code-block:: console
 
    $ sudo /bin/bash
-   $ git clone https://github.com/NAThompson/django_https.git    
-   $ pyvenv django_https
-   $ cd django_https
-   $ source bin/activate
-   $ pip install -r requirements.txt
-   $ cd src
-   $ ./manage.py checksecure # Validate that basic security steps have been taken
-   $ ./manage.py runsslserver --addrport 127.0.0.1:443
+   # git clone https://github.com/NAThompson/django_https.git    
+   # pyvenv django_https
+   # cd django_https
+   # source bin/activate
+   # pip install -r requirements.txt
+   # cd src
+   # ./manage.py checksecure # Validate that basic security steps have been taken
+   # ./manage.py runsslserver --addrport 127.0.0.1:443
 
-Visit at ``https://127.0.0.1``; your browser won't trust your certificate.
+Then visit at ``https://127.0.0.1``; your browser won't trust your certificate but just trust it anyway.
+
+To get this served with ``gunicorn``, use
+
+.. code-block:: console
+
+   # cd src
+   # gunicorn -c gunicorn_config.py https.wsgi
+					   
     
