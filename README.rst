@@ -14,7 +14,7 @@ To use:
    # ./manage.py checksecure # Validate that basic security steps have been taken
    # ./manage.py runsslserver --addrport 127.0.0.1:443
 
-Then visit at ``https://127.0.0.1``; your browser won't trust your certificate but just trust it anyway.
+Then visit at ``https://127.0.0.1``; your browser won't trust your self-signed certificate but no one cares.
 
 To get this served with ``gunicorn``, use
 
