@@ -22,5 +22,17 @@ To get this served with ``gunicorn``, use
 
    # cd src
    # gunicorn -c gunicorn_config.py https.wsgi
-					   
-    
+
+You'll need to change the address from ``127.0.0.1:8000`` to ``0.0.0.0:443`` to make it publicly visible.
+
+To get this served with ``nginx``, use
+
+.. code-block:: console
+
+   # cd django_https
+   # emacs -nw default # Edit the path to your certificate, change the site to your own.
+   # cp default /etc/nginx/sites-enabled/default
+   # gunicorn -c gunicorn_config.py https.wsgi &
+   # nginx
+
+And now visit your website!
