@@ -1,19 +1,4 @@
-##
-# You should look at the following URL's in order to grasp a solid understanding
-# of Nginx configuration files in order to fully unleash the power of Nginx.
-# http://wiki.nginx.org/Pitfalls
-# http://wiki.nginx.org/QuickStart
-# http://wiki.nginx.org/Configuration
-#
-# Generally, you will want to move this file somewhere, and start with a clean
-# file but keep this around for reference. Or just disable in sites-enabled.
-#
-# Please see /usr/share/doc/nginx-doc/examples/ for more detailed examples.
-##
-
-# Default server configuration
-#
-
+# Redirect http request to https:
 server {
        listen         80;
        listen         [::]:80;
@@ -25,8 +10,9 @@ server {
        listen         443;
        ssl            on;
        server_name    jeremiahcornsticks.com;
-       ssl_certificate /home/NAThompson/django_https/lib/python3.4/site-packages/sslserver/certs/development.crt;
-       ssl_certificate_key /home/NAThompson/django_https/lib/python3.4/site-packages/sslserver/certs/development.key;
+       ssl_certificate /home/NAThompson/jeremiahcornsticks.com.ssl/bundle.crt;
+       ssl_certificate_key /home/NAThompson/jeremiahcornsticks.com.ssl/jeremiahcornsticks.com.key;
+
        location / {
              proxy_pass https://127.0.0.1:8000;
              proxy_set_header Host $host;
