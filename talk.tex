@@ -148,6 +148,28 @@ ssl_dhparam /path_to_pem/dhparam.pem
 You can see the SSLLabs rating guide \href{https://www.ssllabs.com/downloads/SSL_Server_Rating_Guide.pdf}{here}.
 \end{frame}
 
+\begin{frame}[fragile]
+\frametitle{But there's still low-hanging fruit!}
+Add this to the server section in default:
+\begin{minted}{c}
+add_header Strict-Transport-Security ``max-age=63072000; includeSubdomains'';
+\end{minted}
+\begin{figure}
+\includegraphics[scale=0.25]{figures/SSLLabsAp.png}
+\end{figure}
+\end{frame}
 
+\begin{frame}[fragile]
+\frametitle{Last one!}
+To get a strong key-exchange, we need at least 4096 bit keys:
+\begin{minted}{bash}
+$ openssl genrsa -out foo.key 4096
+$ openssl req -new -sha256 -key foo.key -out foo.csr
+\end{minted}
+Use this certificate signing request to get certs from your provider, and you're done!
+\begin{figure}
+\includegraphics[scale=0.25]{figures/App.png}
+\end{figure}
+\end{frame}
 
 \end{document}
