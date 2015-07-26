@@ -1,0 +1,61 @@
+\documentclass{beamer}
+\usepackage{minted}
+\usepackage{hyperref}
+\hypersetup{
+colorlinks=true,
+urlcolor=blue
+}
+
+\begin{document}
+\title{Securing Django Websites}
+\author{Nick Thompson} 
+\date{\today}
+
+\frame{\titlepage}
+
+\begin{frame}[fragile]
+\frametitle{Getting started:}
+\begin{minted}{bash}
+$ git clone https://github.com/NAThompson/django_https.git
+$ pyvenv django_https
+$ cd django_https
+$ sudo /bin/bash
+# pip3 install -r requirements.txt
+# . bin/activate
+\end{minted}
+\end{frame}
+
+\begin{frame}
+\frametitle{Server Stack}
+\begin{itemize}
+\item We're going to use Django+gunicorn+nginx to serve this website
+\item \href{http://gunicorn.org/\#deployment}{gunicorn} is a web server gateway interface
+\item We need nginx to reverse proxy because gunicorn is trivially vunerable to DOS attacks
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Install nginx}
+\begin{minted}{bash}
+$ sudo apt-get install nginx # Ubuntu
+$ sudo brew install nginx # Mac
+\end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Symlink our nginx.conf into the global}
+\begin{minted}{bash}
+$ cd django_https
+$ rm -f /etc/nginx/nginx.conf /etc/nginx/sites-available/default
+$ ln -s `pwd`/nginx.conf /etc/nginx/nginx.conf
+$ ln -s `pwd`/default /etc/nginx/sites-available/default
+\end{minted}
+(Sorry peeps I didn't bother to relativize all the paths; you'll need to edit!)
+\end{frame}
+
+\begin{frame}[fragile]
+Now we can serve the website:
+\end{frame}
+
+
+\end{document}
