@@ -254,12 +254,47 @@ You can see the SSLLabs rating guide \href{https://www.ssllabs.com/downloads/SSL
 \frametitle{But there's still low-hanging fruit!}
 Add this to the server section in default:
 \begin{minted}{c}
-add_header Strict-Transport-Security ``max-age=63072000; includeSubdomains'';
+add_header Strict-Transport-Security "max-age=63072000; includeSubdomains";
 \end{minted}
 \begin{figure}
 \includegraphics[scale=0.25]{figures/SSLLabsAp.png}
 \end{figure}
 \end{frame}
+
+\begin{frame}[fragile]
+\frametitle{What is Strict Transport Security?}
+\begin{itemize}
+\item A protocol by which servers force all traffic to come over https.
+\item Stops downgrade attacks and cookie hijacking.
+\item max-age is the period over which browsers should remember to come to that server with only https requests
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{What is Strict Transport Security?}
+A user who has visited your site previously \emph{cannot} proceed past a bad certificate:
+\begin{figure}
+\includegraphics[scale=0.25]{figures/HSTSNoRedirect.png}
+\end{figure}
+(Unless they clear their browser cache . . . then the user can ignore the warning and proceed.)
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{HSTS Redirects http to https}
+\emph{But only after a user visits the first time . . .}
+
+Workaround:
+
+Register your site in the \href{https://hstspreload.appspot.com/}{preload list!}
+
+``This form is used to submit domains for inclusion in Chrome's HTTP Strict Transport Security (HSTS) preload list. This is a list of sites that are hardcoded into Chrome as being HTTPS only.''
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Most importantly!}
+HSTS prevents \href{http://www.thoughtcrime.org/software/sslstrip/}{SSL stripping!} 
+\end{frame}
+
 
 \begin{frame}[fragile]
 \frametitle{Last one!}
@@ -272,6 +307,16 @@ Use this certificate signing request to get certs from your provider, and you're
 \begin{figure}
 \includegraphics[scale=0.25]{figures/App.png}
 \end{figure}
+\end{frame}
+
+\begin{frame}
+\frametitle{OCSP Stapling}
+\begin{itemize}
+\item OCSP := Online Certificate Status Protocol
+\item Used to determine if a certificate has been revoked
+\item Browsers must query CA, revealing websites they visit
+\item OCSP Stapling: Server caches CA's OCSP response, increasing privacy as well as speed
+\end{itemize}
 \end{frame}
 
 \end{document}
