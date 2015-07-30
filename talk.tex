@@ -309,7 +309,7 @@ Use this certificate signing request to get certs from your provider, and you're
 \end{figure}
 \end{frame}
 
-\begin{frame}
+\begin{frame}[fragile]
 \frametitle{OCSP Stapling}
 \begin{itemize}
 \item OCSP := Online Certificate Status Protocol
@@ -318,5 +318,36 @@ Use this certificate signing request to get certs from your provider, and you're
 \item OCSP Stapling: Server caches CA's OCSP response, increasing privacy as well as speed
 \end{itemize}
 \end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Clickjacking}
+\begin{itemize}
+\item Someone renders your page in theirs (example: ebay.com/buynicecar)
+\item Then they make your page invisible, but put ``Win free iPad!'', and a place to click over the ``Buy it now'' link of the ebay listing
+\item If you are logged in on ebay, you are the proud owner of a new car!
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Clickjacking}
+``\href{https://www.owasp.org/index.php/Clickjacking}{One} of the most notorious examples of Clickjacking was an attack against the Adobe Flash plugin settings page. By loading this page into an invisible iframe, an attacker could trick a user into altering the security settings of Flash, giving permission for any Flash animation to utilize the computer's microphone and camera.''
+\end{frame}
+
+\begin{frame}
+\frametitle{Defense against clickjacking}
+As a web user: You're screwed.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Defense against clickjacking}
+
+As a developer: Add the following to your nginx.conf:
+\begin{minted}{c}
+add_header X-Frame-Options DENY;
+\end{minted}
+Note that this was a non-standard extension to html. There is a standardized way, but it's not yet supported by all modern browsers
+\end{frame}
+
+
 
 \end{document}
