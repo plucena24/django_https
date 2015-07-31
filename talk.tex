@@ -154,9 +154,12 @@ This is a mess, what does it mean?
 
 \begin{frame}
 \frametitle{Interpreting ssl\_ciphers}
-The order matters: Adding ``ssl\_prefer\_server\_ciphers on;`` to the nginx.conf tells nginx to ignore the preferences of the browser.
 
-The order of entries to ssl\_ciphers tells nginx what cipher suite it should prefer.
+\begin{itemize}
+\item The order matters: Adding ``ssl\_prefer\_server\_ciphers on;`` to the nginx.conf tells nginx to ignore the preferences of the browser.
+
+\item The order of entries to ssl\_ciphers tells nginx what cipher suite it should prefer.
+\end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -214,7 +217,7 @@ ssl_ciphers = 'ECDHE-ECDSA-AES128-GCM-SHA256:
 \end{minted}
 \end{frame}
 
-\begin{frame}
+\begin{frame}[fragile]
 \frametitle{Some advice:}
 \begin{itemize}
 \item \href{https://www.schneier.com/blog/archives/2009/07/another_new_aes.html}{Prefer} 128-bit AES to 256-bit AES
@@ -227,12 +230,64 @@ ssl_ciphers = 'ECDHE-ECDSA-AES128-GCM-SHA256:
 \begin{frame}[fragile]
 \frametitle{Enabling Perfect-Forward Secrecy}
  ``. . . which \href{https://www.owasp.org/index.php/Transport_Layer_Protection_Cheat_Sheet}{means} a compromise of the server's long term signing key does not compromise the confidentiality of past session''
+
  
- We can get perfect forward secrecy via use of ephemeral keys . . .
 \end{frame}
 
 \begin{frame}[fragile]
-To use ephemeral keys we need to generate big primes:
+\frametitle{Defense Against the Logjam attack}
+The logjam attack is relatively new, and is an attack against Diffie-Hellman key exchange. 
+
+Let's review:
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Diffie-Hellman Key Exchange Review}
+\begin{itemize}
+\item Server picks a prime $p$ and $g < p$ along with random $a< p$. $p$ and $g$ are public, $a$ is secret. 
+\item Over the network is transferred $A := g^{a} \mod p$, $g$, $p$, cryptographically signed.
+\item Client chooses $b < p$ and sends the server $B = g^{b}\mod p$.
+\item The shared secret is $s := g^{ab} \mod p$.
+\end{itemize}
+This is a secure protocol as solving $A = g^{a} \mod p$ for $a$ (called ``the discrete logarithm'') is hard.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Diversion: Forward secrecy in Diffie-Hellman}
+\begin{itemize}
+\item Question: What does the server do with $a$ after the SSL session ends? And therefore can the NSA subpoena your Diffie-Helman keys?
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{What if it takes 2 minutes to generate a prime $p$ for Diffie-Hellman key exchange?}
+
+Then everyone uses the same damn prime.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{What if we have to support 20 year old browsers?}
+
+Then an attacker can do a downgrade attack so that the prime $p$ is only 512 bits.
+
+So this allows MITM to intercept your server message, and send it saying ``we only support 512 bit DH''; the browser supports it, so it agrees to use of export-grade crypto.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{What if the prime $p$ is only 512 bits? That's still alot}
+\begin{itemize}
+\item Solving a 512 bit discrete logarithm is hard; it takes an academic group about a week.
+
+\item But for fixed $p$,  using a \emph{very sophisticated} lookup table, computing the \emph{next} discrete log only takes 90 seconds.
+
+\item ``\href{http://blog.cryptographyengineering.com/2015/05/attack-of-week-logjam.html}{The} situation for export Diffie-Hellman is particularly awful, with only two (!) primes used across up 92\% of enabled Apache/mod\_ssl sites.''
+
+\end{itemize}
+The \href{https://weakdh.org/sysadmin.html}{solution} is . . .
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Generating a large, unique Diffie-Hellman Prime}
 \begin{minted}{bash}
 $ openssl dhparam -out dhparam.pem 4096
 \end{minted}
@@ -328,12 +383,12 @@ Use this certificate signing request to get certs from your provider, and you're
 \end{itemize}
 \end{frame}
 
-\begin{frame}
+\begin{frame}[fragile]
 \frametitle{Clickjacking}
 ``\href{https://www.owasp.org/index.php/Clickjacking}{One} of the most notorious examples of Clickjacking was an attack against the Adobe Flash plugin settings page. By loading this page into an invisible iframe, an attacker could trick a user into altering the security settings of Flash, giving permission for any Flash animation to utilize the computer's microphone and camera.''
 \end{frame}
 
-\begin{frame}
+\begin{frame}[fragile]
 \frametitle{Defense against clickjacking}
 As a web user: You're screwed.
 \end{frame}
@@ -346,6 +401,33 @@ As a developer: Add the following to your nginx.conf:
 add_header X-Frame-Options DENY;
 \end{minted}
 Note that this was a non-standard extension to html. There is a standardized way, but it's not yet supported by all modern browsers
+\end{frame}
+
+
+\begin{frame}[fragile]
+\frametitle{Content Sniffing}
+\begin{itemize}
+\item Some html content is not given the proper tags for its interpretation
+\item So Microsoft decided to give IE the capacity to guess the interpretation of a byte-stream, called content-sniffing
+\item And that algorithm sucks.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Content Sniffing}
+\begin{itemize}
+\item By using bugs in the IE content sniffer, users can be deceived about what sort of content they are downloading (they thing .jpg, they get a script).
+
+\item This is mainly a problem on sites where users can both upload and download data.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Preventing Content Sniffing Attacks}
+Add the following to the nginx.conf:
+\begin{minted}{c}
+add_header X-Content-Type-Options nosniff;
+\end{minted}
 \end{frame}
 
 
