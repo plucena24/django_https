@@ -69,6 +69,27 @@ We'll need root to open up priviledged ports. Sourcing after acquisition of root
 \end{frame}
 
 \begin{frame}[fragile]
+\frametitle{Configuring django-secure}
+\begin{itemize}
+\item Add the following to your INSTALLED\_APPS:
+\begin{minted}{python}
+INSTALLED_APPS = (
+    'sslserver',
+    ...,
+    'djangosecure',
+)
+\end{minted}
+\pause
+\item Then run the test server via:
+\begin{minted}{bash}
+./manage.py checksecure 
+./manage.py runsslserver --addrport 127.0.0.1:443
+\end{minted}
+This is nice for development because it uses self-signed certificates with relative paths.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
 \frametitle{Install nginx}
 \begin{minted}{bash}
 $ sudo apt-get install nginx # Ubuntu
@@ -427,6 +448,21 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 \end{minted}
 \pause
 \item Not that this will override the nginx settings, if you set them both.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Debugging Aid:}
+\begin{itemize}
+\item The server's use of HSTS is communicated via http headers, and nginx doesn't do a strong validation of the nginx.conf. In addition, nginx version changes can silently break your nginx.conf.
+\pause
+\item To validate that you've actually set a http header:
+\pause
+\item Use ``Live HTTP Headers'' Chrome browser extension (I like it!)
+\pause 
+\item Use alt-command-I on Chrome (more painful)
+\pause 
+\item Use Wireshark
 \end{itemize}
 \end{frame}
 
