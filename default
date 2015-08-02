@@ -23,6 +23,9 @@ server {
        #Disallow IE from trying to guess content types:
        add_header X-Content-Type-Options nosniff;
 
+       #Public key pinning:
+       add_header Public-Key-Pins 'pin-sha256="N75JcN+pnfzlS9WlZ5MQ5bMrYf8FixevQdnXECdeI8k="; pin-sha256="LK8yU6d5hJnXaONIycD2bYNCwu9MVBL3MjM/Fs1a9pg="; includeSubDomains; max-age=0';
+
        location / {
        	     proxy_pass http://127.0.0.1:8000;
              proxy_set_header Host $host;
