@@ -64,14 +64,14 @@ We'll need root to open up priviledged ports. Sourcing after acquisition of root
 \pause
 \item In my experience, nginx seems to be faster, so we'll focus on configuring nginx.
 \pause 
-\item django-secure settings will tend to override nginx settings.
+\item django-secure settings will tend to override nginx settings, or they will be set twice in the http headers. So use nginx, or use django-secure, not both.
 \end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]
 \frametitle{Configuring django-secure}
 \begin{itemize}
-\item Add the following to your INSTALLED\_APPS:
+\item Add the following to your INSTALLED\_APPS in settings.py:
 \begin{minted}{python}
 INSTALLED_APPS = (
     'sslserver',
@@ -82,8 +82,8 @@ INSTALLED_APPS = (
 \pause
 \item Then run the test server via:
 \begin{minted}{bash}
-./manage.py checksecure 
-./manage.py runsslserver --addrport 127.0.0.1:443
+$ ./manage.py checksecure 
+$ ./manage.py runsslserver --addrport 127.0.0.1:443
 \end{minted}
 This is nice for development because it uses self-signed certificates with relative paths.
 \end{itemize}
@@ -94,30 +94,6 @@ This is nice for development because it uses self-signed certificates with relat
 \begin{minted}{bash}
 $ sudo apt-get install nginx # Ubuntu
 $ sudo brew install nginx # Mac
-\end{minted}
-\end{frame}
-
-\begin{frame}[fragile]
-\frametitle{Apology:}
-\begin{itemize}
-\item nginx doesn't support relative paths in conf files, or relative paths \emph{to} conf files.
-
-\item So you'll need to edit these files for your own purposes.
-\end{itemize}
-\end{frame}
-
-\begin{frame}[fragile]
-\frametitle{Redirects}
-If we don't listen on port 80, then users will need to type the protocol into the browser, which no one does. 
-
-Hence we need to put this in \emph{default}:
-\begin{minted}{bash}
-server {
-    listen         80;
-    listen         [::]:80;
-    server_name    www.example.com example.com;
-    return         301 https://$server_name$request_uri;
-}
 \end{minted}
 \end{frame}
 
@@ -356,7 +332,7 @@ This is a secure protocol as solving $A = g^{a} \mod p$ for $a$ (called ``the di
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{What if the prime $p$ is only 512 bits? That's still alot}
+\frametitle{What if the prime $p$ is only 512 bits? That's still a lot}
 \begin{itemize}
 \item Solving a 512 bit discrete logarithm is hard; it takes an academic group about a week.
 \pause
@@ -467,6 +443,15 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 \end{frame}
 
 \begin{frame}[fragile]
+\frametitle{Debugging http headers:}
+Example using Live HTTP headers Chrome extension:
+\begin{figure}
+\includegraphics[scale=0.35]{./figures/xframedeny.png}
+\end{figure}
+\end{frame}
+
+
+\begin{frame}[fragile]
 \frametitle{Strong key-exchange}
 To get a strong key-exchange, we need at least 4096 bit keys:
 \pause
@@ -560,6 +545,30 @@ SECURE_FRAME_DENY = True
 \pause
 \item Note that this is a non-standard extension to html. There is a standardized way (see content security policies), but it's not yet supported by all modern browsers
 \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Defense against clickjacking}
+\begin{itemize}
+\item This is such a huge problem that the default django configuration actually sets the http response header ``X-Frame-Options: SAMEORIGIN'':
+\begin{minted}{python}
+MIDDLEWARE_CLASSES = (
+...
+'django.middleware.clickjacking.XFrameOptionsMiddleware',
+...
+)
+\end{minted}
+\pause
+\item SAMEORIGIN means you can embed your own webpages in html frames, but disallows its embedding in other people's websites.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Verify the http header}
+Again, verify that the \texttt{X-Frame-Options: DENY} header has been sent:
+\begin{figure}
+\includegraphics[scale=0.35]{./figures/debugging_http_headers.png}
+\end{figure}
 \end{frame}
 
 \begin{frame}[fragile]

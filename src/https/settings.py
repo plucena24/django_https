@@ -4,14 +4,15 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = 'ozhavzgjqu@4qqh8&8s85@#m6cg0ec!ju&-u54ye57kya3fows'
 
-DEBUG = True
+DEBUG = False
 
 TEMPLATE_DEBUG = DEBUG
 
 ALLOWED_HOSTS = []
 
+#To begin, we start with an insecure setting:
 INSTALLED_APPS = (
-    'sslserver',
+    #'sslserver',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -19,20 +20,20 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'hello',
-    'djangosecure',
+    #'djangosecure',
 )
 
 MIDDLEWARE_CLASSES = (
-    'sslify.middleware.SSLifyMiddleware',
+    #'sslify.middleware.SSLifyMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    #'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'djangosecure.middleware.SecurityMiddleware',
+    #'djangosecure.middleware.SecurityMiddleware',
 )
 
 ROOT_URLCONF = 'https.urls'
@@ -64,7 +65,7 @@ DATABASES = {
 
 #SECURE_SSL_REDIRECT = True
 
-#SECURE_HSTS_SECONDS = 1
+#SECURE_HSTS_SECONDS = 63000000
 
 #SECURE_HSTS_SUBDOMAINS = True
 
