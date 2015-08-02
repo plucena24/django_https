@@ -607,6 +607,53 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 \end{frame}
 
 \begin{frame}[fragile]
+\frametitle{Certificate Authority Fraud}
+\begin{itemize}
+\item What happens if two certificate authorities issue certificates for the same website?
+\pause
+\item \href{http://arstechnica.com/security/2011/08/earlier-this-year-an-iranian/}{Example:} The Iranian gov't hacked the Dutch certificate authority, and issued a certificate for google.com.
+\pause
+\item \href{http://arstechnica.com/security/2011/03/independent-iranian-hacker-claims-responsibility-for-comodo-hack/}{An Iranian} hacked Comodo and issued numerous certificates for various websites, allowing him to eavesdrop on anyone who resolved to his certs.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{\emph{Mitigation} for Certificate Authority Fraud:}
+\begin{itemize}
+\item A way of dealing with CA fraud is called \emph{public key pinning}.
+\pause
+\item This tells your browser to remember what the public keys were for your website; \emph{trusting what it receives the first time}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Public Key Pinning}
+\begin{itemize}
+\item In order to \href{https://developer.mozilla.org/en-US/docs/Web/Security/Public_Key_Pinning}{generate the hashes} of your public keys use
+\begin{minted}{base}
+$  openssl rsa -in foo.key -outform der -pubout |
+     openssl dgst -sha256 -binary |
+      openssl enc -base64
+\end{minted}
+\pause 
+\item If that key gets compromised, users browsers will detect fraud if you have to generate new keys. So you need to generate a hash of a backup key:
+\begin{minted}{bash}
+$ openssl rsa -in backup.key -outform der -pubout | 
+     openssl dgst -sha256 -binary |
+       openssl enc -base64
+\end{minted}
+\pause
+\item Copy and paste these hashes into the server section of \texttt{default}:
+\begin{minted}{c}
+add_header Public-Key-Pins 
+     'pin-sha256="N75JcN+pnfzlS9WlZ5MQ5bMrYf8FixevQdnXECdeI8k="; 
+     pin-sha256="LK8yU6d5hJnXaONIycD2bYNCwu9MVBL3MjM/Fs1a9pg="; 
+     includeSubDomains; max-age=0';
+\end{minted}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
 \frametitle{Diminishing Returns}
 \begin{itemize}
 \item nginx announces its version to all the world
