@@ -12,5 +12,6 @@ pyvenv.cfg
 *.vrb
 *.nav
 *.out
+*.gz
 **/db.sqlite3
 src/signups/migrations/*

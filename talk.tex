@@ -58,6 +58,17 @@ We'll need root to open up priviledged ports. Sourcing after acquisition of root
 \end{frame}
 
 \begin{frame}[fragile]
+\frametitle{Configuring Secure Settings}
+\begin{itemize}
+\item Many security settings can be configured either through nginx or through django-secure.
+\pause
+\item In my experience, nginx seems to be faster, so we'll focus on configuring nginx.
+\pause 
+\item django-secure settings will tend to override nginx settings.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
 \frametitle{Install nginx}
 \begin{minted}{bash}
 $ sudo apt-get install nginx # Ubuntu
@@ -147,12 +158,12 @@ to
 \end{itemize}
 \end{frame}
 
-\begin{frame}
+\begin{frame}[fragile]
 \frametitle{Some justification for only supporting TLSv1.2}
 \begin{itemize}
-\item The \href{https://www.pcisecuritystandards.org/}{PCI Security Standards Council} says you must remove support for TLSv1.0 to be PCI compliant. ``SSL and early TLS are not considered strong cryptography and cannot be used as a security control after 30th June, 2016.``
+\item The \href{https://www.pcisecuritystandards.org/}{Payment Card Industry (PCI) Security Standards Council} says you must remove support for TLSv1.0 to be PCI compliant. ``SSL and early TLS are not considered strong cryptography and cannot be used as a security control after 30th June, 2016.``
 \pause
-\item \href{https://www.owasp.org/index.php/Transport_Layer_Protection_Cheat_Sheet}{OWASP} claims ``TLS 1.0 is still widely used as 'best' protocol by a lot of browsers, that are not patched to the very latest version. It suffers CBC Chaining attacks and Padding Oracle attacks. TLSv1.0 should only be used only after risk analysis and acceptance.``
+\item \href{https://www.owasp.org/index.php/Transport_Layer_Protection_Cheat_Sheet}{OWASP} (Open Web Application Security Project) claims ``TLS 1.0 is still widely used as 'best' protocol by a lot of browsers, that are not patched to the very latest version.  . . TLSv1.0 should only be used only after risk analysis and acceptance.``
 \pause
 \item Almost \href{https://en.wikipedia.org/wiki/Transport_Layer_Security\#Web_browsers}{no browsers} support TLSv1.1 and \emph{not} TLSv1.2. So make your life easier and just use 1.2.
 \end{itemize}
@@ -204,9 +215,9 @@ aNULL:!eNULL:!LOW:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS;
 \frametitle{Understanding available ciphersuites}
 To see what ciphers your nginx supports, run
 \begin{minted}{bash}
-$ openssl ciphers
+$ openssl ciphers | tr ':' '\n'
 \end{minted}
-(nginx links against openssl)
+(nginx links against openssl's libraries)
 \end{frame}
 
 \begin{frame}[fragile]
@@ -223,9 +234,9 @@ TLSv1.2 Kx=ECDH     Au=RSA  Enc=AESGCM(256) Mac=AEAD
 \pause
 \item Au=Authentication; uses RSA 
 \pause
-\item  Enc= Encryption; AESGCM(256) is 256 bit Advanced Encryption Standard in Galois Counter mode for encryption
+\item  Enc= Encryption; AESGCM(256) is 256 bit Advanced Encryption Standard in Galois Counter mode for encryption (please don't ask about GCM!)
 \pause
-\item Mac= Message Authentication; AEAD =``authentication encryption with associated data'' for message authentication (inherited from the ``Galois counter mode of AES'')
+\item Mac= Message Authentication; AEAD =``authentication encryption with associated data'' for message authentication (inherited from the ``Galois counter mode'' of AES)
 \end{itemize}
 \end{frame}
 
@@ -354,29 +365,20 @@ You can see the SSLLabs rating guide \href{https://www.ssllabs.com/downloads/SSL
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{But there's still low-hanging fruit!}
-Add this to the server section in default:
-\begin{minted}{c}
-add_header Strict-Transport-Security "max-age=63072000; includeSubdomains";
-\end{minted}
-\begin{figure}
-\includegraphics[scale=0.25]{figures/SSLLabsAp.png}
-\end{figure}
-\end{frame}
-
-\begin{frame}[fragile]
-\frametitle{What is Strict Transport Security?}
+\frametitle{What is HTTP Strict Transport Security? (HSTS)}
 \begin{itemize}
 \item A protocol by which servers force all traffic to come over https.
 \pause
+\item Server informs browser to recognize MITM attack by requests for http traffic
+\pause
 \item Stops downgrade attacks and cookie hijacking.
 \pause
-\item max-age is the period over which browsers should remember to come to that server with only https requests
+\item Stops \href{http://www.thoughtcrime.org/software/sslstrip/}{SSL stripping!}
 \end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{What is Strict Transport Security?}
+\frametitle{HSTS}
 A user who has visited your site previously \emph{cannot} proceed past a bad certificate:
 \begin{figure}
 \includegraphics[scale=0.25]{figures/HSTSNoRedirect.png}
@@ -394,15 +396,39 @@ A user who has visited your site previously \emph{cannot} proceed past a bad cer
 \pause
 \item Register your site in the \href{https://hstspreload.appspot.com/}{preload list!}
 \pause
-``This form is used to submit domains for inclusion in Chrome's HTTP Strict Transport Security (HSTS) preload list. This is a list of sites that are hardcoded into Chrome as being HTTPS only.''
+\item ``This form is used to submit domains for inclusion in Chrome's HTTP Strict Transport Security (HSTS) preload list. This is a list of sites that are hardcoded into Chrome as being HTTPS only.''
 \end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Most importantly!}
-HSTS prevents \href{http://www.thoughtcrime.org/software/sslstrip/}{SSL stripping!} 
+\frametitle{Configuring HSTS}
+\begin{itemize}
+\item Add this to the server section in ``default'':
+\begin{minted}{c}
+add_header Strict-Transport-Security \
+ "max-age=63072000; includeSubdomains";
+\end{minted}
+\begin{figure}
+\includegraphics[scale=0.25]{figures/SSLLabsAp.png}
+\end{figure}
+\pause
+\item The server now says: ``For the next 63072000 seconds, this server and its subdomains will only be using https. Any http traffic is a MITM attack.''
+\end{itemize}
 \end{frame}
 
+\begin{frame}[fragile]
+\frametitle{HSTS Configured in django-secure}
+\begin{itemize}
+\item Add the following to your settings.py:
+\begin{minted}{python}
+SECURE_HSTS_SECONDS = 63072000
+SECURE_HSTS_SUBDOMAINS = True
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+\end{minted}
+\pause
+\item Not that this will override the nginx settings, if you set them both.
+\end{itemize}
+\end{frame}
 
 \begin{frame}[fragile]
 \frametitle{Strong key-exchange}
@@ -428,7 +454,7 @@ Use this certificate signing request to get certs from your provider, and you're
 \pause
 \item Browsers must query certificate authority (CA), revealing websites they visit
 \pause
-\item OCSP Stapling: Server caches CA's OCSP response, increasing privacy as well as speed
+\item OCSP Stapling: Server caches CA's OCSP digitally signed response, increasing privacy as well as speed
 \end{itemize}
 \end{frame}
 
@@ -441,7 +467,8 @@ cat  foo1.crt foo2.crt > ocsp.crt;
 \end{minted}
 Since I bought \$5 certificates for this talk, I did:
 \begin{minted}{bash}
- cat COMODORSADomainValidationSecureServerCA.crt COMODORSAAddTrustCA.crt > ocsp.crt
+ cat COMODORSADomainValidationSecureServerCA.crt \
+  COMODORSAAddTrustCA.crt > ocsp.crt
 \end{minted}
 \pause
 \item Then add the following lines to the nginx.conf:
@@ -454,6 +481,12 @@ Since I bought \$5 certificates for this talk, I did:
 \end{itemize}
 \end{frame}
 
+\begin{frame}[fragile]
+\frametitle{Diversion: Certificate Authorities}
+\begin{itemize}
+\item Free, trusted certificates coming next month from \href{https://letsencrypt.org/}{Let's Encrypt}
+\end{itemize}
+\end{frame}
 
 \begin{frame}[fragile]
 \frametitle{Clickjacking}
@@ -484,10 +517,14 @@ As a web user: You're screwed.
 add_header X-Frame-Options DENY;
 \end{minted}
 \pause
-\item Note that this was a non-standard extension to html. There is a standardized way (see content security policies), but it's not yet supported by all modern browsers
+\item Or to your settings.py:
+\begin{minted}{python}
+SECURE_FRAME_DENY = True
+\end{minted}
+\pause
+\item Note that this is a non-standard extension to html. There is a standardized way (see content security policies), but it's not yet supported by all modern browsers
 \end{itemize}
 \end{frame}
-
 
 \begin{frame}[fragile]
 \frametitle{Content Sniffing}
@@ -511,10 +548,17 @@ add_header X-Frame-Options DENY;
 
 \begin{frame}[fragile]
 \frametitle{Preventing Content Sniffing Attacks}
-Add the following to the nginx.conf:
+\begin{itemize}
+\item Add the following to the nginx.conf:
 \begin{minted}{c}
 add_header X-Content-Type-Options nosniff;
 \end{minted}
+\pause
+\item Or to your settings.py:
+\begin{minted}{python}
+SECURE_CONTENT_TYPE_NOSNIFF = True
+\end{minted}
+\end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -532,6 +576,5 @@ server_tokens off;
 \item SSLlabs can still determine that nginx is serving the website, but doesn't know the version.
 \end{itemize}
 \end{frame}
-
 
 \end{document}
