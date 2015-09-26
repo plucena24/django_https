@@ -25,8 +25,6 @@ urlcolor=blue
 \item This will not provide information about securing your server, only information about keeping data secure when it is on the wire.
 \pause
 \item More information about securing your server can be found \href{https://www.thefanclub.co.za/how-to/how-secure-ubuntu-1204-lts-server-part-1-basics}{elsewhere}.
-\pause
-\item Securing the wire is the easy part; harder is keeping authenticated users from grabbing other users data \emph{because that's code you write yourself}.
 \end{itemize}
 \end{frame}
 
@@ -48,8 +46,8 @@ We'll need root to open up priviledged ports. Sourcing after acquisition of root
 \begin{frame}[fragile]
 \frametitle{Generating Certificates}
 \begin{minted}{bash}
-$ openssl genrsa  openssl genrsa -out example.com.key 4096 # Private key
-$ openssl req -new -sha256 -key example.com.key -out example.com.csr # Certificate signing request
+$ openssl genrsa -out example.com.key 4096 # Private key
+$ openssl req -new -sha256 -key example.com.key -out example.com.csr
 $ openssl req -noout -text -in example.com.csr # Validation
 $ cat example.com.csr  | pbcopy # Copy/Paste the csr into your certificate issuer's field
 \end{minted}
@@ -105,14 +103,6 @@ This is nice for development because it uses self-signed certificates with relat
 
 But it also might convince your browser that it's experiencing a MITM attack at 127.0.0.1, which is annoying.
 \end{itemize}
-\end{frame}
-
-\begin{frame}[fragile]
-\frametitle{Install nginx}
-\begin{minted}{bash}
-$ sudo apt-get install nginx # Ubuntu
-$ sudo brew install nginx # Mac
-\end{minted}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -289,8 +279,6 @@ There are \href{https://cc.dcsec.uni-hannover.de/}{some websites} who will tell 
 \item Prefer SHA256 over SHA1 as SHA1 will be \href{http://googleonlinesecurity.blogspot.com/2014/09/gradually-sunsetting-sha-1.html}{deprecated}.
 \pause
 \item Make sure to sign your certificates with SHA256 over SHA1, or else it will not be trusted by Google Chrome.
-\pause
-\item \href{https://www.nsa.gov/business/programs/elliptic_curve.shtml}{Prefer} elliptic curves, unless you think the NSA has a \href{https://en.wikipedia.org/wiki/Elliptic_curve_cryptography}{quantum computer}.
 \end{itemize}
 \end{frame}
 
@@ -489,42 +477,42 @@ Use this certificate signing request to get certs from your provider, and you're
 \end{figure}
 \end{frame}
 
-\begin{frame}[fragile]
-\frametitle{OCSP Stapling}
-\begin{itemize}
-\item OCSP := Online Certificate Status Protocol
-\pause
-\item Used to determine if a certificate has been revoked
-\pause
-\item Browsers must query certificate authority (CA), revealing websites they visit
-\pause
-\item OCSP Stapling: Server caches CA's OCSP digitally signed response, increasing privacy as well as speed
-\end{itemize}
-\end{frame}
-
-\begin{frame}[fragile]
-\frametitle{Enabling OCSP Stapling in nginx}
-\begin{itemize}
-\item Bundle intermediate and root certifications:
-\begin{minted}{bash}
-cat  foo1.crt foo2.crt > ocsp.crt;
-\end{minted}
-Since I bought \$5 certificates for this talk, I did:
-\begin{minted}{bash}
- cat COMODORSADomainValidationSecureServerCA.crt \
-  COMODORSAAddTrustCA.crt > ocsp.crt
-\end{minted}
-\pause
-\item Then add the following lines to the nginx.conf:
-\begin{minted}{c}
-  resolver 8.8.8.8;
-  ssl_stapling on;
-  ssl_stapling_verify on;
-  ssl_trusted_certificate /pathtocerts/ocsp.crt;
-\end{minted}
-\end{itemize}
-\end{frame}
-
+%\begin{frame}[fragile]
+%\frametitle{OCSP Stapling}
+%\begin{itemize}
+%\item OCSP := Online Certificate Status Protocol
+%\pause
+%\item Used to determine if a certificate has been revoked
+%\pause
+%\item Browsers must query certificate authority (CA), revealing websites they visit
+%\pause
+%\item OCSP Stapling: Server caches CA's OCSP digitally signed response, increasing privacy as well as speed
+%\end{itemize}
+%\end{frame}
+%
+%\begin{frame}[fragile]
+%\frametitle{Enabling OCSP Stapling in nginx}
+%\begin{itemize}
+%\item Bundle intermediate and root certifications:
+%\begin{minted}{bash}
+%cat  foo1.crt foo2.crt > ocsp.crt;
+%\end{minted}
+%Since I bought \$5 certificates for this talk, I did:
+%\begin{minted}{bash}
+% cat COMODORSADomainValidationSecureServerCA.crt \
+%  COMODORSAAddTrustCA.crt > ocsp.crt
+%\end{minted}
+%\pause
+%\item Then add the following lines to the nginx.conf:
+%\begin{minted}{c}
+%  resolver 8.8.8.8;
+%  ssl_stapling on;
+%  ssl_stapling_verify on;
+%  ssl_trusted_certificate /pathtocerts/ocsp.crt;
+%\end{minted}
+%\end{itemize}
+%\end{frame}
+%
 \begin{frame}[fragile]
 \frametitle{Diversion: Certificate Authorities}
 \begin{itemize}
@@ -586,13 +574,13 @@ MIDDLEWARE_CLASSES = (
 \end{itemize}
 \end{frame}
 
-\begin{frame}[fragile]
-\frametitle{Verify the http header}
-Again, verify that the \texttt{X-Frame-Options: DENY} header has been sent:
-\begin{figure}
-\includegraphics[scale=0.35]{./figures/debugging_http_headers.png}
-\end{figure}
-\end{frame}
+%\begin{frame}[fragile]
+%\frametitle{Verify the http header}
+%Again, verify that the \texttt{X-Frame-Options: DENY} header has been sent:
+%\begin{figure}
+%\includegraphics[scale=0.35]{./figures/debugging_http_headers.png}
+%\end{figure}
+%\end{frame}
 
 \begin{frame}[fragile]
 \frametitle{Content Sniffing}
