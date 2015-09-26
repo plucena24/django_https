@@ -45,15 +45,31 @@ $$ . bin/activate
 We'll need root to open up priviledged ports. Sourcing after acquisition of root shell is necessary.
 \end{frame}
 
-\begin{frame}
+\begin{frame}[fragile]
+\frametitle{Generating Certificates}
+\begin{minted}{bash}
+$ openssl genrsa  openssl genrsa -out example.com.key 4096 # Private key
+$ openssl req -new -sha256 -key example.com.key -out example.com.csr # Certificate signing request
+$ openssl req -noout -text -in example.com.csr # Validation
+$ cat example.com.csr  | pbcopy # Copy/Paste the csr into your certificate issuer's field
+\end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Installing Certificates}
+Once you get your certs from your certificate authority, then need to be bundled \emph{in the right order}:
+\begin{minted}{bash}
+$ cat www_example_com.crt COMODORSADomainValidationSecureServerCA.crt \
+COMODORSAAddTrustCA.crt AddTrustExternalCARoot.crt > bundle.crt
+\end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
 \frametitle{Server Stack}
 \begin{itemize}
 \item We're going to use Django+gunicorn+nginx to serve this website
 \pause
 \item \href{http://gunicorn.org/\#deployment}{gunicorn} is a web server gateway interface
-\pause
-\item We need nginx to reverse proxy because gunicorn is trivially vunerable to DOS attacks
-\pause
 \end{itemize}
 \end{frame}
 
@@ -62,7 +78,7 @@ We'll need root to open up priviledged ports. Sourcing after acquisition of root
 \begin{itemize}
 \item Many security settings can be configured either through nginx or through django-secure.
 \pause
-\item In my experience, nginx seems to be faster, so we'll focus on configuring nginx.
+\item In my experience, nginx is less painful, so we'll focus on configuring nginx.
 \pause 
 \item django-secure settings will tend to override nginx settings, or they will be set twice in the http headers. So use nginx, or use django-secure, not both.
 \end{itemize}
@@ -86,6 +102,8 @@ $ ./manage.py checksecure
 $ ./manage.py runsslserver --addrport 127.0.0.1:443
 \end{minted}
 This is nice for development because it uses self-signed certificates with relative paths.
+
+But it also might convince your browser that it's experiencing a MITM attack at 127.0.0.1, which is annoying.
 \end{itemize}
 \end{frame}
 
@@ -121,7 +139,9 @@ server {
 \begin{minted}{bash}
 $$ cd django_https/src
 $$ gunicorn -c gunicorn_config.py https.wsgi &
-$$ nginx -c ~/django_https/nginx.conf
+$$ cd ..
+$$ nginx -c `pwd`/nginx.conf -t
+$$ nginx -c `pwd`/nginx.conf 
 \end{minted}
 (Again, there are some hard-coded paths in this . . .)
 \end{frame}
@@ -175,15 +195,14 @@ to
 \begin{minted}{c}
 ssl_ciphers ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA\
 -AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE\
--RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA:!\
-aNULL:!eNULL:!LOW:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS;
+-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA;
 \end{minted}
 \pause
 \item This is a mess, what does it mean?
 \end{itemize}
 \end{frame}
 
-\begin{frame}
+\begin{frame}[fragile]
 \frametitle{This configures \emph{ciphersuite negotiation}}
 \begin{itemize}
 \item The browser tells the server what ciphersuites it supports
@@ -254,7 +273,7 @@ ssl_ciphers ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384;
 \end{frame}
 
 
-\begin{frame}
+\begin{frame}[fragile]
 \frametitle{What ciphersuites does my browser support?}
 There are \href{https://cc.dcsec.uni-hannover.de/}{some websites} who will tell you:
 \begin{figure}
@@ -345,12 +364,13 @@ The \href{https://weakdh.org/sysadmin.html}{solution} is . . .
 \begin{frame}[fragile]
 \frametitle{Generating a large, unique Diffie-Hellman Prime}
 \begin{minted}{bash}
-$ openssl dhparam -out dhparam.pem 4096
+$ openssl dhparam -2 -check -out dhparam.pem 4096
 \end{minted}
 and add the following line to the nginx.conf:
 \begin{minted}{bash}
 ssl_dhparam /path_to_pem/dhparam.pem
 \end{minted}
+The ``-2'' is the group generator, 4096 is the number of bits.
 \end{frame}
 
 \begin{frame}[fragile]
@@ -433,22 +453,25 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 \item The server's use of HSTS is communicated via http headers, and nginx doesn't do a strong validation of the nginx.conf. In addition, nginx version changes can silently break your nginx.conf.
 \pause
 \item To validate that you've actually set a http header:
-\pause
-\item Use ``Live HTTP Headers'' Chrome browser extension (I like it!)
-\pause 
-\item Use alt-command-I on Chrome (more painful)
-\pause 
-\item Use Wireshark
+\begin{minted}{bash}
+$ curl -v -I https://example.com
+< Strict-Transport-Security: max-age=63072000; includeSubdomains; always
+Strict-Transport-Security: max-age=63072000; includeSubdomains; always
+< X-Frame-Options: DENY
+X-Frame-Options: DENY
+< X-Content-Type-Options: nosniff
+X-Content-Type-Options: nosniff
+\end{minted}
 \end{itemize}
 \end{frame}
 
-\begin{frame}[fragile]
-\frametitle{Debugging http headers:}
-Example using Live HTTP headers Chrome extension:
-\begin{figure}
-\includegraphics[scale=0.35]{./figures/xframedeny.png}
-\end{figure}
-\end{frame}
+%\begin{frame}[fragile]
+%\frametitle{Debugging http headers:}
+%Example using Live HTTP headers Chrome extension:
+%\begin{figure}
+%\includegraphics[scale=0.35]{./figures/xframedeny.png}
+%\end{figure}
+%\end{frame}
 
 
 \begin{frame}[fragile]
@@ -527,7 +550,7 @@ Since I bought \$5 certificates for this talk, I did:
 
 \begin{frame}[fragile]
 \frametitle{Defense against clickjacking}
-As a web user: You're screwed.
+As a web user: You're screwed. But you shouldn't click on ``Free iPad'' links.
 \end{frame}
 
 \begin{frame}[fragile]
@@ -563,7 +586,7 @@ MIDDLEWARE_CLASSES = (
 \end{itemize}
 \end{frame}
 
-\begin{frame}
+\begin{frame}[fragile]
 \frametitle{Verify the http header}
 Again, verify that the \texttt{X-Frame-Options: DENY} header has been sent:
 \begin{figure}
@@ -577,8 +600,6 @@ Again, verify that the \texttt{X-Frame-Options: DENY} header has been sent:
 \item Some html content is not given the proper tags for its interpretation
 \pause
 \item So Microsoft decided to give IE the capacity to guess the interpretation of a byte-stream, called content-sniffing
-\pause
-\item And that algorithm sucks.
 \end{itemize}
 \end{frame}
 
@@ -654,18 +675,16 @@ add_header Public-Key-Pins
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Diminishing Returns}
+\frametitle{Pony Checkup}
+For django-powered websites, use \href{https://www.ponycheckup.com}{Pony Checkup} to do additional security validation.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Additional Security Tools for Django}
+
 \begin{itemize}
-\item nginx announces its version to all the world
-\pause
-\item This makes life easy for zero-day hoarders
-\pause
-\item Make life \emph{a bit} harder for them by adding this to the http section of nginx.conf:
-\begin{minted}{c}
-server_tokens off;
-\end{minted}
-\pause
-\item SSLlabs can still determine that nginx is serving the website, but doesn't know the version.
+\item \href{https://github.com/dmpayton/django-admin-honeypot}{django-admin-honeypot} sends an email to admins whenever someone tries to login at example.com/admin
+\item \href{https://pypi.python.org/pypi/django-axes/1.4.0}{django-axes} to lock out a user after a number of failed login attempts
 \end{itemize}
 \end{frame}
 
