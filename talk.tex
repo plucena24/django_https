@@ -673,6 +673,27 @@ For django-powered websites, use \href{https://www.ponycheckup.com}{Pony Checkup
 \end{frame}
 
 \begin{frame}[fragile]
+\frametitle{Subresource integrity from content-delivery networks}
+Many people use bootstrap.min.js, and get it from a content-delivery network. However, CDN's are a bit dangerous, as \href{https://www.maxcdn.com/blog/bootstrapcdn-security-post-mortem}{MaxCDN} can attest: 
+\begin{quote}
+. . . it appears one of our vendors laid off a support engineer. Their credentials weren’t revoked, and that person sold or otherwise transferred them to the attackers. The attackers then rebooted a server into single-user mode, changed the root password, and ssh’d into the  server. From there, they accessed the BootstrapCDN API credentials, updated the origin and port, and purged specific file caches. They began sending files from another hacked web server with a malicious javascript payload
+\end{quote}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Subresource integrity}
+Including otherwise trustworthy CDNs into the threat model lead to a specification called ``subresource integrity''. This is supported in \href{https://hacks.mozilla.org/2015/09/subresource-integrity-in-firefox-43/}{Firefox} and allows inclusion of a hash along with the file:
+\begin{minted}{html}
+<link rel=''stylesheet''
+      href=''https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/css/bootstrap.css''
+      integrity=''sha384-0IWEz6+iu9J0YyeUhozs1TpXuSC0hj1uUufFnkMH43oeCJHRuC+9oss0CznbaWtf''
+      crossorigin=''anonymous''>
+\end{minted}
+Hashes for subresource integrity can be generated at \href{https://www.srihash.org/}{srihash.org}.
+\end{frame}
+
+
+\begin{frame}[fragile]
 \frametitle{Rate-limiting ssh login attempts}
 Since your website needs an admin, it probably needs to be running ssh. And soon you'll start seeing billions of login requests:
 \begin{minted}{bash}
