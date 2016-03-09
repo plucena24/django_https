@@ -20,11 +20,7 @@ urlcolor=blue
 \frametitle{Goals:}
 
 \begin{itemize}
-\item The information provided here should allow you to pass a rigorous security audit for cloud services, assuming your server has not been compromised.
-\pause
-\item This will not provide information about securing your server, only information about keeping data secure when it is on the wire.
-\pause
-\item More information about securing your server can be found \href{https://www.thefanclub.co.za/how-to/how-secure-ubuntu-1204-lts-server-part-1-basics}{elsewhere}.
+\item The information provided here should allow you to pass a rigorous security audit for cloud services.
 \end{itemize}
 \end{frame}
 
@@ -674,6 +670,72 @@ For django-powered websites, use \href{https://www.ponycheckup.com}{Pony Checkup
 \item \href{https://github.com/dmpayton/django-admin-honeypot}{django-admin-honeypot} sends an email to admins whenever someone tries to login at example.com/admin
 \item \href{https://pypi.python.org/pypi/django-axes/1.4.0}{django-axes} to lock out a user after a number of failed login attempts
 \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Rate-limiting ssh login attempts}
+Since your website needs an admin, it probably needs to be running ssh. And soon you'll start seeing billions of login requests:
+\begin{minted}{bash}
+$ cat /var/log/auth.log
+sshd[17070]: Invalid user ts3srv from 125.211.222.103
+sshd[17010]: Invalid user oracle from 125.211.222.103
+sshd[25746]: Invalid user admin from 185.110.132.54
+sshd[26293]: Invalid user support from 185.110.132.54
+sshd[26837]: Invalid user ubnt from 185.110.132.54
+sshd[28465]: Invalid user pi from 185.110.132.54
+sshd[29008]: Invalid user admin from 185.110.132.54
+sshd[29556]: Invalid user user from 185.110.132.54
+sshd[30546]: Invalid user admin from 62.210.29.217
+\end{minted}
+These brute-force password cracking attempts will eventually succeed if no further action is taken.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Rate limit ssh access attempts}
+A defense against brute-force password cracking is fail2ban (which is more generally useful).
+On Ubuntu:
+\begin{minted}{bash}
+$ sudo apt-get install -y fail2ban  
+$ sudo fail2ban-client status sshd # Make sure it's working
+Status for the jail: sshd
+|- Filter
+|  |- Currently failed:0
+|  |- Total failed:3
+|  `- File list:/var/log/auth.log
+`- Actions
+|- Currently banned:0
+|- Total banned:0
+   `- Banned IP list:
+$ cat /var/log/fail2ban.log 
+08:31:36,075 fail2ban.filter [6827]: INFO    [sshd] Found 5.63.119.34
+09:14:13,681 fail2ban.filter [6827]: INFO    [sshd] Found 5.63.119.34
+09:35:41,437 fail2ban.filter [6827]: INFO    [sshd] Found 5.63.119.34
+09:57:10,426 fail2ban.filter [6827]: INFO    [sshd] Found 5.63.119.34
+10:18:32,142 fail2ban.filter [6827]: INFO    [sshd] Found 5.63.119.34
+10:40:09,793 fail2ban.filter [6827]: INFO    [sshd] Found 5.63.119.34
+\end{minted}
+You can see the attempts are slowed down dramatically; by default 5 attempts induces a 10 minute lockout.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Rate limit ssh access attempts}
+As you can see, even with fail2ban, the attacker will eventually get in quite a few password attempts as time progresses. You might want to edit your bantime and maxtries to rate-limit even further:
+\begin{minted}{bash}
+$ emacs /etc/fail2ban/jail.conf # edit ban time.
+\end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{ssh access}
+But the fact remains: Good passwords are hard to remember, and simple passwords are easy to guess. Remove uncertainty by disabling password-based login:
+\begin{minted}{bash}
+$ emacs /etc/ssh/sshd_config
+\end{minted}
+Add the line ``\texttt{PasswordAuthentication no}'', and ``\texttt{PermitRootLogin no}'', and only allow key-based login!
+Then 
+\begin{minted}{bash}
+$ sudo restart ssh
+\end{minted}
 \end{frame}
 
 \end{document}
