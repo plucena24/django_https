@@ -39,8 +39,9 @@ $$ . bin/activate
 We'll need root to open up priviledged ports. Sourcing after acquisition of root shell is necessary.
 \end{frame}
 
+
 \begin{frame}[fragile]
-\frametitle{Generating Certificates}
+\frametitle{Generating Certificates (Traditional)}
 \begin{minted}{bash}
 $ openssl genrsa -out example.com.key 4096 # Private key
 $ openssl req -new -sha256 -key example.com.key -out example.com.csr
@@ -50,13 +51,36 @@ $ cat example.com.csr  | pbcopy # Copy/Paste the csr into your certificate issue
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Installing Certificates}
+\frametitle{Installing Certificates (Traditional)}
 Once you get your certs from your certificate authority, then need to be bundled \emph{in the right order}:
 \begin{minted}{bash}
 $ cat www_example_com.crt COMODORSADomainValidationSecureServerCA.crt \
 COMODORSAAddTrustCA.crt AddTrustExternalCARoot.crt > bundle.crt
 \end{minted}
 \end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Generating Certificates (letsencrypt)}
+\begin{minted}{bash}
+  $ git clone https://github.com/letsencrypt/letsencrypt.git
+  $ cd letsencrypt
+  $ sudo  ./letsencrypt-auto certonly --standalone \
+  --rsa-key-size 4096 -d example.org -d www.example.org \
+  --email admin@example.org
+\end{minted}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Generating Certificates (letsencrypt)}
+  This places your ssl certificate in
+
+  \texttt{/etc/letsencrypt/live/example.org/fullchain.pem}
+
+  and key in
+
+  \texttt{/etc/letsencrypt/live/example.org/privkey.pem}
+\end{frame}
+
 
 \begin{frame}[fragile]
 \frametitle{Server Stack}
